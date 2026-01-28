@@ -10,7 +10,7 @@ import AddTasks from "./pages/Manager/AddTasks";
 import EmployeeDashboard from "./pages/Employee/EmployeeDashboard";
 import ManagerProjects from "./pages/Manager/ManagerProjects";
 const App = () => {
-  const role = "employee";
+  const role = "admin";
   return (
     <div className="h-screen">
       <Routes>

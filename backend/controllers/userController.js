@@ -1,4 +1,4 @@
-const User = require('../models/user')
+import User from '../models/user.js'
 
 const handleGetAllUser =async (req,res)=>{
     try{
@@ -24,7 +24,7 @@ const handleDeleteUserById =async (req,res)=>{
 const handleAddUser = async (req,res)=>{
     try{
         const body =req.body
-    if(!body || !body.name || !body.email|| !body.password || !body.role){
+    if(!body){
         return res.status(400).json("All fields are required")
     }
     const newUser = await User.create({
@@ -40,16 +40,23 @@ const handleAddUser = async (req,res)=>{
     }
 }
 const handleUpdateUser = async (req,res)=>{
-        const reqId = req.params.Id
+    try{
+        const reqId = req.params.id
         const body = req.body
-        await User.findByIdAndUpdate(reqId,{
+        const updatedUser = await User.findByIdAndUpdate(reqId,{
             name: body.name,
             email: body.email,
             password:body.password,
             role: body.role,
-        })
-        return res.json({status:'Updated Sucessfully'})
+        },{new: true})
+        if(!updatedUser){
+            return res.status(404).json({error: 'User not found'})
+        }
+        return res.json({status:'Updated Sucessfully', data:updatedUser})
+    }catch(error){
+
+    }
 }
 
 
-module.exports = {handleGetAllUser,handleGetUserById,handleDeleteUserById,handleAddUser,handleUpdateUser}
+export { handleGetAllUser, handleGetUserById, handleDeleteUserById, handleAddUser, handleUpdateUser }

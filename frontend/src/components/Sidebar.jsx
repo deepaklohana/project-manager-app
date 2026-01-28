@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import AddUserDashboard from "../pages/Admin/AddUserDashboard";
 
 const Sidebar = () => {
-  const role= 'employee'
+  const role= 'admin'
   let deshboardOption = [];
     if (role === "admin") {
       deshboardOption = [

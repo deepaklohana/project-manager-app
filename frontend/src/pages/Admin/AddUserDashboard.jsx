@@ -1,7 +1,19 @@
 import React, { useState } from "react";
-
+import axios from "axios";
+import { useEffect } from "react";
 const AddUserDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [users, setUsers] = useState([]);
+  useEffect(() => {
+    axios
+      .get("http://localhost:5005/api/users")
+      .then((res) => {
+        setUsers(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
   // Form data handle karne ke liye (Optional)
   const handleSaveUser = (e) => {
     e.preventDefault();
@@ -27,22 +39,23 @@ const AddUserDashboard = () => {
           </tr>
         </thead>
         <tbody className="">
-            <tr className="border-t border-b ">
-                <td className="p-1">Deepak Kumar</td>
-                <td className="p-1">deepaklohana41@gmail.com</td>
-                <td className="p-1">Admin</td>
-                <td className="p-1">
-                    <div className="flex gap-2">
-                    <button className="bg-amber-400 text-md font-semibold py-2 px-8 rounded-md active:bg-amber-300">
-                        Edit
-                    </button>
-                    <button className="bg-red-500 text-md font-semibold py-2 px-8 rounded-md active:bg-red-400">
-                        Delete
-                    </button>
-                        
-                    </div>
-                </td>
+          {users.map((user) => (
+            <tr key={user._id} className="border-t border-b ">
+              <td className="p-1">{user.name}</td>
+              <td className="p-1">{user.email}</td>
+              <td className="p-1">{user.role}</td>
+              <td className="p-1">
+                <div className="flex gap-2">
+                  <button  className="bg-amber-400 text-md font-semibold py-2 px-8 rounded-md active:bg-amber-300">
+                    Edit
+                  </button>
+                  <button className="bg-red-500 text-md font-semibold py-2 px-8 rounded-md active:bg-red-400">
+                    Delete
+                  </button>
+                </div>
+              </td>
             </tr>
+          ))}
         </tbody>
       </table>
       {isOpen && (

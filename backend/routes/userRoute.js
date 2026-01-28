@@ -1,12 +1,21 @@
-const express = require('express')
+import express from 'express'
+import { 
+    handleGetAllUser, 
+    handleGetUserById, 
+    handleDeleteUserById, 
+    handleAddUser, 
+    handleUpdateUser 
+} from '../controllers/userController.js';
 
 const router = express.Router()
 
-const {handleGetAllUser,handleGetUserById,handleDeleteUserById, handleAddUser, handleUpdateUser} = require('../controllers/userController')
 
 
-router.route('/').get(handleGetAllUser).post(handleAddUser)
+router.route('/').get(handleGetAllUser)
+router.route('/add').post(handleAddUser)
+router.route('/get/:id').get(handleGetUserById)
+router.route('/delete/:id') .delete(handleDeleteUserById)
+router.route('/update/:id').patch(handleUpdateUser)
 
-router.route('/:id').get(handleGetUserById).delete(handleDeleteUserById).patch(handleUpdateUser)
+export default router
 
-module.exports = router
