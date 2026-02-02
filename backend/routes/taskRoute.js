@@ -1,16 +1,16 @@
-// import express from 'express'
+import express from 'express'
 
-// const router = express.Router()
+const router = express.Router()
 
-// router.route('/').get()
+router.route('/').get()
 
-// router.route('/:id').get()
+router.route('/:id').get()
 
-// router.route('/update/:id').patch()
+router.route('/update/:id').patch()
 
-// router.route('/post').post()
+router.route('/post').post()
 
-// router.route('/delete/:id')
+router.route('/delete/:id')
 
 
-// export default router
+export default router
