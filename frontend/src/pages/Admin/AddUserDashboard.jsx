@@ -1,31 +1,60 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
-import { deleteUser, getUser, postUser } from "../../api/UserApi";
+import { toast } from "sonner";
+import { deleteUser, getUser, postUser, updatedUser } from "../../api/UserApi";
 const AddUserDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const [addUser, setAddUser] = useState({
     name: "",
-    email: '',
-    password: '',
-    role: '',
-
+    email: "",
+    password: "",
+    role: "manager",
   });
+  const [editUser, setEditUser] = useState({});
+  
+  const isEmpty = Object.keys(editUser).length === 0;
 
-  useEffect(() => {
+/* ================= FETCH USERS ================= */
+//get users data
+useEffect(() => {
     getUserData();
   }, []);
 
-  //get users data
   const getUserData = async () => {
     const res = await getUser();
     setUsers(res.data);
     console.log("Check");
   };
+  
+  /* ================= INPUT CHANGE ================= */
+  const inputFieldChange = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+  
+    setAddUser((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
+
+
+  useEffect(() => {
+    if (editUser && Object.keys(editUser).length > 0) {
+      setAddUser({
+        name: editUser.name || "",
+        email: editUser.email || "",
+        password: "",
+        role: editUser.role || "",
+      });
+    }
+  }, [editUser]);
 
 
   //delete user
+
+  
   const handleDeleteUser = async (id) => {
     try {
       const res = await deleteUser(id);
@@ -40,33 +69,91 @@ const AddUserDashboard = () => {
     }
   };
 
-  // Form data handle karne ke liye (Optional)
-  const inputFieldChange= (e)=>{
-    const name= e.target.name
-    const value= e.target.value
+  // Add (Post) User
 
-    setAddUser(prev=>({
-      ...prev,
-      [name]:value
-    }))
-  }
+  const addUserData = async () => {
+    try {
+      const res = await postUser(addUser);
 
-  const addUserData  =async()=>{
-    const res =  await addUser(postUser)
-    if((res.status=200)){
-      setUsers([...user,res.user])
+      if (res.status === 200 || res.status === 201) {
+        // OPTION 1 (RECOMMENDED): backend se fresh list
+        await getUserData();
+
+        // modal close
+        setIsOpen(false);
+
+        // form reset
+        setAddUser({
+          name: "",
+          email: "",
+          password: "",
+          role: "manager",
+        });
+      }
+    } catch (error) {
+      console.log("User add failed:", error);
     }
-  }
-    //Form submit karne ke liye
+  };
+
   const handleSaveUser = (e) => {
     e.preventDefault();
-    addUserData()
+    const action = e.nativeEvent.submitter.value;
+
+    if (action === "Save User") {
+      addUserData();
+      toast.success("User has been created");
+    } else if (action === "Update") {
+      editUserData();
+      
+    }
     console.log("User Saved!");
   };
+  //Update User(patch)
+  const handleeditUser = (user) => {
+    setEditUser(user);
+    setIsOpen(true);
+  };
+  const closeModelBox = () => {
+    setIsOpen(false);
+    setEditUser({})
+    setAddUser({
+      name: "",
+      email: "",
+      password: "",
+      role: "manager",
+    });
+  };
+
+  const editUserData = async () => {
+    try {
+      const payload = { ...addUser };
+      delete payload.password; // 🔒 REMOVE PASSWORD
+      const res = await updatedUser(editUser._id, payload);
+      if (res.status === 200) {
+        await getUserData();
+        setEditUser({});
+        setIsOpen(false);
+        toast.success("User updated");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Update failed");
+    }
+  };
+
   return (
     <div className="mt-6 w-full">
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(true)
+          setEditUser({})
+          setAddUser({
+            name: "",
+            email: "",
+            password: "",
+            role: "manager",
+          });
+        }}
         className="bg-[#212529] text-[#ced4da] py-2 px-8 rounded-md active:bg-[#212529b6]"
       >
         Add User
@@ -89,12 +176,22 @@ const AddUserDashboard = () => {
               <td className="p-1">{user.role}</td>
               <td className="p-1">
                 <div className="flex gap-2">
-                  <button className="bg-amber-400 text-md font-semibold py-2 px-8 rounded-md active:bg-amber-300">
+                  <button
+                    className="bg-amber-400 text-md font-semibold py-2 px-8 rounded-md active:bg-amber-300"
+                    variant="outline"
+                    onClick={() => {
+                      handleeditUser(user);
+                    }}
+                  >
                     Edit
                   </button>
                   {user.role !== "admin" && (
                     <button
-                      onClick={() => handleDeleteUser(user._id)}
+                      onClick={() => {
+                        handleDeleteUser(user._id);
+                        toast.success("User Deleted");
+                      }}
+                      variant="outline"
                       className="bg-red-500 text-md font-semibold py-2 px-8 rounded-md active:bg-red-400"
                     >
                       Delete
@@ -107,11 +204,11 @@ const AddUserDashboard = () => {
         </tbody>
       </table>
 
-      {/* add user form */}
+      {/* add user & update user form */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
           <div className="bg-white p-6 rounded-md w-96">
-            <h2 className="text-xl font-semibold mb-4">Add User</h2>
+            <h2 className="text-xl font-semibold mb-4">{isEmpty ? "Add User" : "Update User"}</h2>
             <form
               className="flex flex-col gap-3"
               action=""
@@ -142,6 +239,7 @@ const AddUserDashboard = () => {
                   id="role"
                   value={addUser.role}
                   onChange={inputFieldChange}
+                  required
                 >
                   <option value="manager"> Manager</option>
                   <option value="employee">Employee</option>
@@ -161,7 +259,8 @@ const AddUserDashboard = () => {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label htmlFor="password">Enter Password</label>
+                <label htmlFor="password">{isEmpty ? "Create Password" : ""}</label>
+                {isEmpty && (
                 <input
                   className="h-8 text-lg pl-2 border-[1.5px] rounded border-[#212529b6]"
                   type="password"
@@ -172,11 +271,13 @@ const AddUserDashboard = () => {
                   id="password"
                   required
                 />
+                )}
               </div>
               <div className="flex justify-end">
                 <div className="flex gap-2 mt-6">
                   <button
-                    onClick={() => setIsOpen(false)}
+                    type="button"
+                    onClick={closeModelBox}
                     className="bg-red-700 text-[#ced4da] py-2 px-8 rounded-md active:bg-red-500"
                   >
                     Close
@@ -184,9 +285,10 @@ const AddUserDashboard = () => {
                   <button
                     type="submit"
                     className="bg-blue-700 text-[#ced4da] py-2 px-8 rounded-md active:bg-blue-500"
-
+                    variant="outline"
+                    value={isEmpty ? "Save User" : "Update"}
                   >
-                    Save User
+                    {isEmpty ? "Save User" : "Update"}
                   </button>
                 </div>
               </div>
